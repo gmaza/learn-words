@@ -1,0 +1,121 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    @*<script src="https://cdn.jsdelivr.net/npm/vue"></script>*@
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-content>
+                <template>
+                    <v-row justify="center">
+                        <v-dialog v-model="dialog" persistent max-width="600px">
+                            <v-card>
+                                <v-card-text>
+                                    <v-container>
+                                        <v-row>
+                                            <v-col cols="12" sm="12" md="12">
+                                                <h3>{{currentWord.meaning}}</h3>
+                                            </v-col>
+                                            <v-col cols="12" sm="12" md="12">
+                                                <v-text-field v-on:keyup.enter="submit" :autofocus="true" v-model="answer" required></v-text-field>
+                                            </v-col>
+                                        </v-row>
+                                        <v-row v-if="showAnswer">
+                                            <v-col cols="12" sm="12" md="12">
+                                                <h3>{{currentWord.word}}</h3>
+                                            </v-col>
+                                        </v-row>
+                                    </v-container>
+                                </v-card-text>
+                                <v-card-actions>
+                                    <v-spacer></v-spacer>
+                                    <v-btn color="blue darken-1" text @@click="submit">Next</v-btn>
+                                </v-card-actions>
+                            </v-card>
+                        </v-dialog>
+                    </v-row>
+                </template>
+            </v-content>
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: {
+                dialog: false,
+                words: [],
+                currentWord: {},
+                answer: '',
+                showAnswer: false,
+                index: 0
+            },
+            computed: {
+               
+            },
+            watch: {
+               
+            },
+
+            created: function () {
+                var self = this;
+                axios
+                    .get("/api/quiz")
+                    .then(response => {
+                        if (response.data) {
+                            self.words = response.data;
+                            self.nextWord();
+                        }
+                    })
+            },
+
+            methods: {
+                nextWord: function () {
+                    var len = this.words.length;
+                    if (len == 0) {
+                        alert("Done");
+                        this.dialog = false;
+                        return;
+                    }
+                    var index = Math.floor(Math.random() * (len - 1));
+                    this.currentWord = this.words[index];
+                    this.dialog = true;
+                    this.index = index;
+                },
+                submit: function () {
+                    if (this.showAnswer) {
+                        this.showAnswer = false;
+                        this.nextWord();
+                        this.answer = "";
+                        return;
+                    } 
+                    if (this.answer == this.currentWord.word) {
+                        this.words.splice(this.index, 1);
+                        this.nextWord();
+                        this.answer = "";
+                    } else {
+                        this.showAnswer = true;
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
